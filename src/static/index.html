@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mergington High School - Extracurricular Activities</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .activity-card {
+            background-color: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .activity-title {
+            color: #0066cc;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        .activity-info {
+            margin: 10px 0;
+            color: #666;
+        }
+        .signup-button {
+            background-color: #0066cc;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .signup-button:hover {
+            background-color: #0052a3;
+        }
+        .email-input {
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 250px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎓 Mergington High School</h1>
+    <h2 style="text-align: center; color: #666;">Extracurricular Activities</h2>
+    
+    <div id="activities-container">
+        <p style="text-align: center;">Loading activities...</p>
+    </div>
+
+    <script>
+        async function loadActivities() {
+            try {
+                const response = await fetch('/activities');
+                const activities = await response.json();
+                
+                const container = document.getElementById('activities-container');
+                container.textContent = '';
+                
+                for (const [name, details] of Object.entries(activities)) {
+                    const card = document.createElement('div');
+                    card.className = 'activity-card';
+                    
+                    // Create and set elements safely using textContent
+                    const title = document.createElement('div');
+                    title.className = 'activity-title';
+                    title.textContent = name;
+                    
+                    const description = document.createElement('div');
+                    description.className = 'activity-info';
+                    description.textContent = '📝 ' + details.description;
+                    
+                    const schedule = document.createElement('div');
+                    schedule.className = 'activity-info';
+                    schedule.textContent = '📅 ' + details.schedule;
+                    
+                    const participants = document.createElement('div');
+                    participants.className = 'activity-info';
+                    participants.textContent = `👥 ${details.participants.length} / ${details.max_participants} participants`;
+                    
+                    const formDiv = document.createElement('div');
+                    formDiv.style.marginTop = '15px';
+                    
+                    const emailInput = document.createElement('input');
+                    emailInput.type = 'email';
+                    emailInput.className = 'email-input';
+                    emailInput.placeholder = 'your.email@mergington.edu';
+                    emailInput.id = `email-${name.replace(/\s+/g, '-')}`;
+                    
+                    const signupButton = document.createElement('button');
+                    signupButton.className = 'signup-button';
+                    signupButton.textContent = 'Sign Up';
+                    signupButton.onclick = () => signUp(name);
+                    
+                    formDiv.appendChild(emailInput);
+                    formDiv.appendChild(signupButton);
+                    
+                    card.appendChild(title);
+                    card.appendChild(description);
+                    card.appendChild(schedule);
+                    card.appendChild(participants);
+                    card.appendChild(formDiv);
+                    
+                    container.appendChild(card);
+                }
+            } catch (error) {
+                console.error('Error loading activities:', error);
+                const container = document.getElementById('activities-container');
+                container.textContent = '';
+                const errorMsg = document.createElement('p');
+                errorMsg.style.color = 'red';
+                errorMsg.style.textAlign = 'center';
+                errorMsg.textContent = 'Error loading activities. Please try again later.';
+                container.appendChild(errorMsg);
+            }
+        }
+
+        async function signUp(activityName) {
+            const emailInput = document.getElementById(`email-${activityName.replace(/\s+/g, '-')}`);
+            const email = emailInput.value;
+            
+            if (!email) {
+                alert('Please enter your email address');
+                return;
+            }
+            
+            if (!email.endsWith('@mergington.edu')) {
+                alert('Please use your Mergington High School email address');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/activities/${encodeURIComponent(activityName)}/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                if (response.ok) {
+                    alert(`Successfully signed up for ${activityName}!`);
+                    emailInput.value = '';
+                    loadActivities();
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.detail}`);
+                }
+            } catch (error) {
+                console.error('Error signing up:', error);
+                alert('Error signing up. Please try again.');
+            }
+        }
+
+        // Load activities when page loads
+        loadActivities();
+    </script>
+</body>
+</html>
