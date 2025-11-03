@@ -9,9 +9,14 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from pathlib import Path
+from pydantic import BaseModel, EmailStr
 
 app = FastAPI(title="Mergington High School API",
               description="API for viewing and signing up for extracurricular activities")
+
+# Pydantic model for signup request
+class SignupRequest(BaseModel):
+    email: EmailStr
 
 # Mount the static files directory
 static_dir = Path(__file__).parent / "static"
@@ -51,8 +56,10 @@ def get_activities():
 
 
 @app.post("/activities/{activity_name}/signup")
-def signup_for_activity(activity_name: str, email: str):
+def signup_for_activity(activity_name: str, signup: SignupRequest):
     """Sign up a student for an activity"""
+    email = signup.email
+    
     # Validate activity exists
     if activity_name not in activities:
         raise HTTPException(status_code=404, detail="Activity not found")
@@ -60,15 +67,12 @@ def signup_for_activity(activity_name: str, email: str):
     # Get the specific activity
     activity = activities[activity_name]
     
-    # Validate email format and domain
-    if not email or "@" not in email:
-        raise HTTPException(status_code=400, detail="Invalid email format")
-    
-    if not email.endswith("@mergington.edu"):
+    # Validate email domain
+    if not str(email).endswith("@mergington.edu"):
         raise HTTPException(status_code=400, detail="Must use Mergington High School email address")
     
     # Check if student is already signed up
-    if email in activity["participants"]:
+    if str(email) in activity["participants"]:
         raise HTTPException(status_code=400, detail="Student already signed up for this activity")
     
     # Check if activity is full
@@ -76,5 +80,5 @@ def signup_for_activity(activity_name: str, email: str):
         raise HTTPException(status_code=400, detail="Activity is full")
 
     # Add student
-    activity["participants"].append(email)
+    activity["participants"].append(str(email))
     return {"message": f"Signed up {email} for {activity_name}"}

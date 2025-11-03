@@ -73,16 +73,47 @@
                 for (const [name, details] of Object.entries(activities)) {
                     const card = document.createElement('div');
                     card.className = 'activity-card';
-                    card.innerHTML = `
-                        <div class="activity-title">${name}</div>
-                        <div class="activity-info">📝 ${details.description}</div>
-                        <div class="activity-info">📅 ${details.schedule}</div>
-                        <div class="activity-info">👥 ${details.participants.length} / ${details.max_participants} participants</div>
-                        <div style="margin-top: 15px;">
-                            <input type="email" class="email-input" placeholder="your.email@mergington.edu" id="email-${name.replace(/\s+/g, '-')}">
-                            <button class="signup-button" onclick="signUp('${name}')">Sign Up</button>
-                        </div>
-                    `;
+                    
+                    // Create and set elements safely using textContent
+                    const title = document.createElement('div');
+                    title.className = 'activity-title';
+                    title.textContent = name;
+                    
+                    const description = document.createElement('div');
+                    description.className = 'activity-info';
+                    description.textContent = '📝 ' + details.description;
+                    
+                    const schedule = document.createElement('div');
+                    schedule.className = 'activity-info';
+                    schedule.textContent = '📅 ' + details.schedule;
+                    
+                    const participants = document.createElement('div');
+                    participants.className = 'activity-info';
+                    participants.textContent = `👥 ${details.participants.length} / ${details.max_participants} participants`;
+                    
+                    const formDiv = document.createElement('div');
+                    formDiv.style.marginTop = '15px';
+                    
+                    const emailInput = document.createElement('input');
+                    emailInput.type = 'email';
+                    emailInput.className = 'email-input';
+                    emailInput.placeholder = 'your.email@mergington.edu';
+                    emailInput.id = `email-${name.replace(/\s+/g, '-')}`;
+                    
+                    const signupButton = document.createElement('button');
+                    signupButton.className = 'signup-button';
+                    signupButton.textContent = 'Sign Up';
+                    signupButton.onclick = () => signUp(name);
+                    
+                    formDiv.appendChild(emailInput);
+                    formDiv.appendChild(signupButton);
+                    
+                    card.appendChild(title);
+                    card.appendChild(description);
+                    card.appendChild(schedule);
+                    card.appendChild(participants);
+                    card.appendChild(formDiv);
+                    
                     container.appendChild(card);
                 }
             } catch (error) {
@@ -107,8 +138,12 @@
             }
             
             try {
-                const response = await fetch(`/activities/${encodeURIComponent(activityName)}/signup?email=${encodeURIComponent(email)}`, {
-                    method: 'POST'
+                const response = await fetch(`/activities/${encodeURIComponent(activityName)}/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email })
                 });
                 
                 if (response.ok) {
