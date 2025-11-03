@@ -118,8 +118,13 @@
                 }
             } catch (error) {
                 console.error('Error loading activities:', error);
-                document.getElementById('activities-container').innerHTML = 
-                    '<p style="color: red; text-align: center;">Error loading activities. Please try again later.</p>';
+                const container = document.getElementById('activities-container');
+                container.textContent = '';
+                const errorMsg = document.createElement('p');
+                errorMsg.style.color = 'red';
+                errorMsg.style.textAlign = 'center';
+                errorMsg.textContent = 'Error loading activities. Please try again later.';
+                container.appendChild(errorMsg);
             }
         }
 
